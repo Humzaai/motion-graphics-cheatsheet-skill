@@ -130,6 +130,55 @@ def dotted_line(draw, x0, y0, x1, y1, color="#CCCCCC", dash=6, gap=4, width=1):
 def make_canvas(bg=BG_LIGHT):
     return Image.new("RGB", (W, H), bg)
 
+LOGO_DIR = "/tmp/logos"   # pre-downloaded by download_logos() below
+
+def paste_logo(img, logo_key, x, y, size, radius=10):
+    """Paste a real PNG brand logo (from LOGO_DIR) onto img with rounded corners.
+    logo_key is the filename without .png (e.g. 'anthropic', 'github', 'notion').
+    Returns True if logo was placed, False if file missing (caller draws fallback)."""
+    path = f"{LOGO_DIR}/{logo_key}.png"
+    if not os.path.exists(path):
+        return False
+    try:
+        import urllib.request
+        from io import BytesIO
+        logo = Image.open(path).convert("RGBA").resize((size, size), Image.LANCZOS)
+        bg = Image.new("RGBA", (size, size), "white")
+        bg.paste(logo, (0, 0), logo)
+        bg = bg.convert("RGB")
+        mask = Image.new("L", (size, size), 0)
+        ImageDraw.Draw(mask).rounded_rectangle([0, 0, size, size], radius=radius, fill=255)
+        img.paste(bg, (int(x), int(y)), mask)
+        return True
+    except Exception:
+        return False
+
+def download_logos(logo_map):
+    """Download brand logos to LOGO_DIR. logo_map = {key: domain}.
+    Uses Clearbit first, Google favicon fallback. Call once at script top.
+    Example: download_logos({'anthropic':'anthropic.com','github':'github.com'})"""
+    import urllib.request
+    from io import BytesIO
+    os.makedirs(LOGO_DIR, exist_ok=True)
+    headers = {"User-Agent": "Mozilla/5.0"}
+    for name, domain in logo_map.items():
+        path = f"{LOGO_DIR}/{name}.png"
+        if os.path.exists(path):
+            continue
+        for url in [
+            f"https://logo.clearbit.com/{domain}?size=128",
+            f"https://www.google.com/s2/favicons?domain={domain}&sz=128",
+        ]:
+            try:
+                req = urllib.request.Request(url, headers=headers)
+                with urllib.request.urlopen(req, timeout=8) as r:
+                    data = r.read()
+                img = Image.open(BytesIO(data)).convert("RGBA").resize((128, 128), Image.LANCZOS)
+                img.save(path)
+                break
+            except Exception:
+                continue
+
 def save_gif(frames, slug, duration=900):
     out = os.path.expanduser(f"~/Desktop/Motion Graphics Cheatsheets/{slug}.gif")
     os.makedirs(os.path.dirname(out), exist_ok=True)
