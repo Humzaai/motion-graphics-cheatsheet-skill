@@ -8,9 +8,13 @@ Drop a topic title → get a fully animated, branded GIF in seconds.
 
 ## Preview
 
-| Claude Code 101 | Radial Spoke | Tiered Levels |
+| Claude Code 101 | Three Ways to Run Claude | Claude Models Compared |
 |:-:|:-:|:-:|
-| ![Claude Code 101](claude-code-101.gif) | ![Radial Spoke](radial-spoke-test.gif) | ![Tiered Levels](tiered-levels-test.gif) |
+| ![Claude Code 101](claude-code-101.gif) | ![Dark Sections](three-ways-to-run-claude.gif) | ![Column Compare](claude-models-pick-the-right-one.gif) |
+
+| My AI Tool Stack | Radial Spoke | Tiered Levels |
+|:-:|:-:|:-:|
+| ![Radial Spoke](my-ai-tool-stack-2026.gif) | ![Radial Test](radial-spoke-test.gif) | ![Tiered Levels](tiered-levels-test.gif) |
 
 ---
 
