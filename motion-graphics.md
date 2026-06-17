@@ -145,115 +145,162 @@ def save_gif(frames, slug, duration=900):
 
 ### LAYOUT A — PROGRESSIVE-LIST (1080×1350)
 
+**Animation pattern:** ALL card slot outlines visible from frame 1 (empty placeholders). Each frame fills in one more card. This way the canvas never looks empty.
+
 **Content vars:**
 ```python
-title         = "How to Prompt Claude Code"
-title_accent  = "Claude Code"
-context_lines = [              # left panel static, 6-9 lines, 34 chars max each
-    "Claude Code is an AI coding",
-    "agent in your **terminal**.",
-    "",
-    "It reads your codebase,",
-    "runs commands, and ships",
-    "features **end-to-end**.",
-    "",
-    "Start with /plan. Always.",
-    "Give it a CLAUDE.md.",
-]
-# Each item: (label, description, icon_char, icon_color)
-# icon_char: single Unicode char rendered in a colored box (↓ ≡ ⊘ / ◉ ★ ⬡ !)
-# icon_color: unique hex per item — cycle through palette below
-ICON_PALETTE = ["#3498DB","#2ECC71","#E74C3C","#FF6B35","#9B59B6","#F39C12","#1ABC9C","#E67E22"]
+title        = "Claude Code 101"
+title_accent = "101"
+# icon_kind options: "download" "document" "shield" "slash" "brain" "star" "grid" "bulb"
+# "arrow_right" "lock" "check" "plug" "eye" "code" "people" "chart"
+# icon_color: unique hex per item — 8-color palette below
+ICON_PALETTE = ["#3498DB","#27AE60","#E74C3C","#FF6B35","#8E44AD","#F39C12","#16A085","#D35400"]
 items = [
-    ("INSTALL",       "npm i -g @anthropic-ai/claude-code",               "↓",  "#3498DB"),
-    ("CLAUDE.md",     "Your rulebook. Claude reads it every session.",     "≡",  "#2ECC71"),
-    ("MODES",         "Plan → Default → Auto. Trust ladder.",              "⊘",  "#E74C3C"),
-    ("SLASH CMDS",    "/plan /review /memory /compact /clear",             "/",  "#FF6B35"),
-    ("MEMORY",        "Saves rules and lessons across all sessions.",      "◉",  "#9B59B6"),
-    ("SKILLS",        "Custom /commands you build and reuse.",             "★",  "#F39C12"),
-    ("MCP SERVERS",   "Connect Gmail, Calendar, Notion and more.",         "⬡",  "#1ABC9C"),
-    ("AUTO MODE",     "Ships features end-to-end. Approve nothing.",       "!",  "#E67E22"),
+    ("INSTALL",         "npm i -g @anthropic-ai/claude-code",               "download","#3498DB"),
+    ("CLAUDE.md",       "Your rulebook. Claude reads it every session.",     "document","#27AE60"),
+    ("PERMISSION MODE", "Plan = safe.  Default = balanced.  Auto = trust.", "shield",  "#E74C3C"),
+    ("SLASH COMMANDS",  "/plan  /review  /memory  /compact  /clear",        "slash",   "#FF6B35"),
+    ("MEMORY",          "Saves rules and lessons across all sessions.",      "brain",   "#8E44AD"),
+    ("SKILLS",          "Build custom /commands — your own reusable flows.", "star",    "#F39C12"),
+    ("MCP SERVERS",     "Connect Gmail, Calendar, Notion, GitHub + more.",   "grid",    "#16A085"),
+    ("PRO TIP",         "Drop files, not folders. Keep CLAUDE.md tight.",    "bulb",    "#D35400"),
 ]
-slug = "how-to-prompt-claude-code"
+slug = "claude-code-101"
 ```
 
-**Layout constants:**
+**Layout constants (1080×1350, 8 items):**
 ```python
 CONTENT_Y = 162
-CTX_X     = PADDING        # left context column
-ITEM_H    = 130            # vertical slot per item
+N         = len(items)
+CARD_W    = W - 2*PADDING           # 960
+CARD_GAP  = 10
+CARD_H    = (H - 64 - CONTENT_Y - CARD_GAP*(N-1)) // N   # ~131px
 
-SPINE_X   = 492            # x of vertical timeline spine
-DOT_R     = 8              # radius of spine dot
-ICON_X    = SPINE_X + 28  # icon box left edge
-ICON_SIZE = 36             # icon box w & h
-PILL_X    = ICON_X + ICON_SIZE + 10   # pill tag left edge
-F_ICON    = F_LABEL        # font for icon chars
+BAR_W     = 7                        # left color bar width
+ICON_SIZE = 48
+ICON_X    = PADDING + BAR_W + 16    # 83
+LABEL_X   = ICON_X + ICON_SIZE + 20 # 151
+SPINE_X   = PADDING - 18            # 42 (timeline in left margin)
+DOT_R     = 8
 ```
 
-**Key helpers:**
+**Icon shapes (drawn — no font glyphs needed):**
 ```python
-def dot_y(i):
-    return CONTENT_Y + 14 + i * ITEM_H + ICON_SIZE // 2
-
-def draw_icon_box(d, x, y, char, color):
-    rr(d, [x, y, x+ICON_SIZE, y+ICON_SIZE], 8, color)
-    cw = tw(char, F_ICON); ch = th(char, F_ICON)
-    d.text((x+(ICON_SIZE-cw)//2, y+(ICON_SIZE-ch)//2 - 1), char, font=F_ICON, fill=TEXT_WHITE)
-
-def draw_pill_tag(d, x, y, label):
-    lw = tw(label, F_LABEL); pw = lw + 24
-    rr(d, [x, y, x+pw, y+26], 5, TAG_BG)
-    d.text((x+12, y+(26-th("A",F_LABEL))//2), label, font=F_LABEL, fill=TAG_FG)
-    return pw
+def draw_icon(d, x, y, kind, color, size=48):
+    cx=x+size//2; cy=y+size//2; w=TEXT_WHITE
+    if kind=="download":
+        d.line([(cx,y+10),(cx,cy+4)],fill=w,width=4)
+        d.polygon([(cx-9,cy+4),(cx+9,cy+4),(cx,y+size-10)],fill=w)
+    elif kind=="document":
+        for lx in [cy-10,cy,cy+10]: d.line([(x+12,lx),(x+size-12,lx)],fill=w,width=3)
+    elif kind=="shield":
+        d.ellipse([x+10,y+10,x+size-10,y+size-10],outline=w,width=3)
+        d.line([(x+14,y+14),(x+size-14,y+size-14)],fill=w,width=3)
+    elif kind=="slash":
+        d.line([(x+size-14,y+10),(x+14,y+size-10)],fill=w,width=5)
+    elif kind=="brain":
+        d.ellipse([x+8,y+8,x+size-8,y+size-8],outline=w,width=3)
+        d.ellipse([x+17,y+17,x+size-17,y+size-17],outline=w,width=2)
+        d.ellipse([x+size//2-4,y+size//2-4,x+size//2+4,y+size//2+4],fill=w)
+    elif kind=="star":
+        pts=[]
+        for i in range(10):
+            a=math.radians(i*36-90); r=18 if i%2==0 else 9
+            pts.append((cx+r*math.cos(a),cy+r*math.sin(a)))
+        d.polygon(pts,fill=w)
+    elif kind=="grid":
+        for gx,gy in [(x+10,y+10),(x+27,y+10),(x+10,y+27),(x+27,y+27)]: rr(d,[gx,gy,gx+12,gy+12],3,w)
+    elif kind=="bulb":
+        d.ellipse([cx-5,y+8,cx+5,y+18],fill=w)
+        d.rectangle([cx-3,y+22,cx+3,y+size-10],fill=w)
+        d.ellipse([cx-3,y+size-12,cx+3,y+size-6],fill=w)
+    elif kind=="arrow_right":
+        d.line([(x+10,cy),(x+size-14,cy)],fill=w,width=4)
+        d.polygon([(x+size-14,cy-8),(x+size-14,cy+8),(x+size-8,cy)],fill=w)
+    elif kind=="check":
+        d.line([(x+10,cy),(cx-4,y+size-10),(x+size-10,y+10)],fill=w,width=4)
+    elif kind=="lock":
+        d.rectangle([x+12,cy-2,x+size-12,y+size-10],fill=w)
+        d.arc([x+16,y+10,x+size-16,cy+4],180,0,fill=w,width=3)
+    elif kind=="code":
+        d.line([(x+14,cy-8),(x+8,cy),(x+14,cy+8)],fill=w,width=3)
+        d.line([(x+size-14,cy-8),(x+size-8,cy),(x+size-14,cy+8)],fill=w,width=3)
+    elif kind=="people":
+        d.ellipse([cx-14,y+8,cx-2,y+20],fill=w)
+        d.arc([cx-18,y+20,cx+2,y+size-8],180,0,fill=w,width=3)
+        d.ellipse([cx+2,y+10,cx+14,y+22],fill=w)
+        d.arc([cx-2,y+22,cx+18,y+size-6],180,0,fill=w,width=3)
+    elif kind=="chart":
+        for bx,bh in [(x+10,size-16),(x+22,size//2),(x+34,size-24)]:
+            d.rectangle([bx,y+size-bh-8,bx+8,y+size-8],fill=w)
 ```
 
 **Full frame code:**
 ```python
-def make_base():
-    img = make_canvas()
-    d = ImageDraw.Draw(img)
+def card_y(i): return CONTENT_Y + i*(CARD_H+CARD_GAP)
+def dot_cy(i): return card_y(i) + CARD_H//2
+
+def hex_rgb(h): h=h.lstrip('#'); return tuple(int(h[i:i+2],16) for i in (0,2,4))
+def blend(c,f=0.84,over="#F4F4F1"):
+    r,g,b=hex_rgb(c); br,bg_,bb=hex_rgb(over)
+    return "#{:02X}{:02X}{:02X}".format(int(r*(1-f)+br*f),int(g*(1-f)+bg_*f),int(b*(1-f)+bb*f))
+
+def make_frame(n_filled):
+    img=Image.new("RGB",(W,H),"#F4F4F1")
+    d=ImageDraw.Draw(img)
     draw_header(d, title, title_accent)
-    cy = CONTENT_Y + 10
-    for line in context_lines:
-        parts = line.split("**"); cx = CTX_X
-        for i, part in enumerate(parts):
-            color = ACCENT if i % 2 == 1 else TEXT_MID
-            d.text((cx, cy), part, font=F_BODY, fill=color)
-            cx += tw(part, F_BODY)
-        cy += 30
-    draw_footer(img)
+    draw_footer(img); d=ImageDraw.Draw(img)
+
+    _nw=tw("08",F_NUM)   # width of largest number
+    DESC_MAX_W=PADDING+CARD_W-LABEL_X-_nw-28
+
+    for i,(label,desc,icon_kind,color) in enumerate(items):
+        cy=card_y(i)
+        if i < n_filled:
+            # Filled card
+            rr(d,[PADDING,cy,PADDING+CARD_W,cy+CARD_H],10,"#FFFFFF","#E0E0DA",1)
+            d.rectangle([PADDING,cy,PADDING+BAR_W,cy+CARD_H],fill=color)
+            rr(d,[PADDING,cy,PADDING+BAR_W+4,cy+CARD_H],0,color)
+            # Faint background number
+            ns=f"{i+1:02d}"; nw=tw(ns,F_NUM); nh=th(ns,F_NUM)
+            d.text((PADDING+CARD_W-nw-16,cy+(CARD_H-nh)//2),ns,font=F_NUM,fill=blend(color,0.78,"#FFFFFF"))
+            # Icon box
+            icon_y=cy+(CARD_H-ICON_SIZE)//2
+            rr(d,[ICON_X,icon_y,ICON_X+ICON_SIZE,icon_y+ICON_SIZE],10,color)
+            draw_icon(d,ICON_X,icon_y,icon_kind,color)
+            # Connector line icon → label
+            d.line([(ICON_X+ICON_SIZE+2,cy+CARD_H//2),(LABEL_X-4,cy+CARD_H//2)],
+                   fill=blend(color,0.55,"#FFFFFF"),width=2)
+            # Pill label (upper half)
+            pill_y=cy+CARD_H//2-31; lw=tw(label,F_LABEL); pw=lw+26; ph=28
+            rr(d,[LABEL_X,pill_y,LABEL_X+pw,pill_y+ph],6,blend(color,0.84,"#FFFFFF"))
+            d.text((LABEL_X+13,pill_y+(ph-th("A",F_LABEL))//2),label,font=F_LABEL,fill=color)
+            # Description (pixel-accurate wrapping)
+            words=desc.split(); line=""; lines_out=[]
+            for word in words:
+                test=line+" "+word if line else word
+                if tw(test,F_BODY)<=DESC_MAX_W: line=test
+                else: lines_out.append(line); line=word
+            if line: lines_out.append(line)
+            for li,ln in enumerate(lines_out[:2]):
+                d.text((LABEL_X,cy+CARD_H//2+4+li*22),ln,font=F_BODY,fill=TEXT_MID)
+        else:
+            # Empty placeholder
+            rr(d,[PADDING,cy,PADDING+CARD_W,cy+CARD_H],10,"#FAFAF8","#E4E4E0",1)
+            d.rectangle([PADDING,cy,PADDING+BAR_W,cy+CARD_H],fill="#D4D4D0")
+
+    # Growing timeline spine
+    if n_filled>0:
+        yt=dot_cy(0); yb=dot_cy(n_filled-1)
+        d.line([(SPINE_X,yt),(SPINE_X,yb)],fill="#C4C4C0",width=3)
+        for i in range(n_filled):
+            color=items[i][3]; dcy=dot_cy(i)
+            d.ellipse([SPINE_X-DOT_R,dcy-DOT_R,SPINE_X+DOT_R,dcy+DOT_R],fill=color,outline="#FFFFFF",width=2)
+            d.line([(SPINE_X+DOT_R,dcy),(PADDING,dcy)],fill=color,width=2)
     return img
 
-def make_frame(n):
-    img = make_base()
-    d = ImageDraw.Draw(img)
-    if n == 0:
-        return img
-    # Growing timeline spine — shadow then spine
-    y_top = dot_y(0); y_bot = dot_y(n - 1)
-    d.line([(SPINE_X, y_top), (SPINE_X, y_bot)], fill="#D0D0CC", width=4)
-    d.line([(SPINE_X, y_top), (SPINE_X, y_bot)], fill="#BEBEBB", width=2)
-    # Items
-    for i, (label, desc, icon_char, icon_color) in enumerate(items[:n]):
-        iy = CONTENT_Y + 14 + i * ITEM_H
-        dy = dot_y(i)
-        # Dot on spine
-        d.ellipse([SPINE_X-DOT_R, dy-DOT_R, SPINE_X+DOT_R, dy+DOT_R],
-                  fill=icon_color, outline="#FFFFFF", width=2)
-        # Horizontal connector: dot → icon
-        d.line([(SPINE_X+DOT_R, dy), (ICON_X, dy)], fill=icon_color, width=2)
-        # Icon box
-        draw_icon_box(d, ICON_X, iy, icon_char, icon_color)
-        # Pill label
-        draw_pill_tag(d, PILL_X, iy, label)
-        # Description
-        wrapped = textwrap.fill(desc, width=34)
-        d.multiline_text((PILL_X, iy+32), wrapped, font=F_BODY, fill=TEXT_MID, spacing=4)
-    return img
-
-frames = [make_frame(n + 1) for n in range(len(items))]
-out = save_gif(frames, slug)
+frames=[make_frame(n+1) for n in range(N)]
+out=save_gif(frames, slug, duration=850)
 os.system(f'open "{out}"')
 ```
 
