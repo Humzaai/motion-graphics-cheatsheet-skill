@@ -16,9 +16,9 @@ Drop a topic title → get a fully animated, branded GIF in seconds.
 |:-:|:-:|:-:|
 | ![Radial Spoke](my-ai-tool-stack-2026.gif) | ![Radial Test](radial-spoke-test.gif) | ![Tiered Levels](tiered-levels-test.gif) |
 
-| Claude Connectors | Loop Engineering |
-|:-:|:-:|
-| ![Claude Connectors](claude-connectors.gif) | ![Loop Engineering](loop-engineering.gif) |
+| Claude Connectors | Loop Engineering | Learn Claude in 7 Days |
+|:-:|:-:|:-:|
+| ![Claude Connectors](claude-connectors.gif) | ![Loop Engineering](loop-engineering.gif) | ![Learn Claude in 7 Days](how-to-learn-claude-in-7-days.gif) |
 
 ---
 
