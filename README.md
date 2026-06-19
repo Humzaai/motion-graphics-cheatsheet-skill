@@ -16,9 +16,9 @@ Drop a topic title → get a fully animated, branded GIF in seconds.
 |:-:|:-:|:-:|
 | ![Radial Spoke](my-ai-tool-stack-2026.gif) | ![Radial Test](radial-spoke-test.gif) | ![Tiered Levels](tiered-levels-test.gif) |
 
-| Claude Connectors |
-|:-:|
-| ![Claude Connectors](claude-connectors.gif) |
+| Claude Connectors | Loop Engineering |
+|:-:|:-:|
+| ![Claude Connectors](claude-connectors.gif) | ![Loop Engineering](loop-engineering.gif) |
 
 ---
 
